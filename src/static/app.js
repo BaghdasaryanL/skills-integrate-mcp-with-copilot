@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
+  const signupButton = signupForm.querySelector('button[type="submit"]');
   const messageDiv = document.getElementById("message");
 
   // Function to fetch activities from API
@@ -12,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      activitySelect.replaceChildren(activitySelect.options[0]);
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -20,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft =
           details.max_participants - details.participants.length;
+        const isFull = spotsLeft <= 0;
 
         // Create participants HTML with delete icons instead of bullet points
         const participantsHTML =
@@ -41,7 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <p><strong>Availability:</strong> ${
+            isFull ? "Full" : `${spotsLeft} spots left`
+          }</p>
           <div class="participants-container">
             ${participantsHTML}
           </div>
@@ -52,9 +57,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Add option to select dropdown
         const option = document.createElement("option");
         option.value = name;
-        option.textContent = name;
+        option.textContent = isFull ? `${name} (Full)` : name;
+        option.disabled = isFull;
         activitySelect.appendChild(option);
       });
+      signupButton.disabled =
+        activitySelect.selectedOptions[0]?.disabled ?? false;
 
       // Add event listeners to delete buttons
       document.querySelectorAll(".delete-btn").forEach((button) => {
@@ -66,6 +74,10 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching activities:", error);
     }
   }
+
+  activitySelect.addEventListener("change", () => {
+    signupButton.disabled = activitySelect.selectedOptions[0]?.disabled ?? false;
+  });
 
   // Handle unregister functionality
   async function handleUnregister(event) {
